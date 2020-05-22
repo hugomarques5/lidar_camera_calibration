@@ -56,6 +56,7 @@ Eigen::Matrix3d lidarToCamera;
 void callback_noCam(const sensor_msgs::PointCloud2ConstPtr& msg_pc,
 					const lidar_camera_calibration::marker_6dof::ConstPtr& msg_rt)
 {
+	ROS_INFO("cheguei7");
 	ROS_INFO_STREAM("Velodyne scan received at " << msg_pc->header.stamp.toSec());
 	ROS_INFO_STREAM("marker_6dof received at " << msg_rt->header.stamp.toSec());
 
@@ -99,10 +100,10 @@ void callback_noCam(const sensor_msgs::PointCloud2ConstPtr& msg_pc,
 	}
 	std::cout << "\n";
 
-	bool no_error = getCorners(temp_mat, retval, config.P, config.num_of_markers, config.MAX_ITERS);
-	if(no_error){
+	//bool no_error = getCorners(temp_mat, retval, config.P, config.num_of_markers, config.MAX_ITERS);
+	//if(no_error){
 	    find_transformation(marker_info, config.num_of_markers, config.MAX_ITERS, lidarToCamera);
-	}
+	//}
 	//ros::shutdown();
 }
 
@@ -110,7 +111,7 @@ void callback(const sensor_msgs::CameraInfoConstPtr& msg_info,
 			  const sensor_msgs::PointCloud2ConstPtr& msg_pc,
 			  const lidar_camera_calibration::marker_6dof::ConstPtr& msg_rt)
 {
-
+	ROS_INFO("cheguei6");
 	ROS_INFO_STREAM("Camera info received at " << msg_info->header.stamp.toSec());
 	ROS_INFO_STREAM("Velodyne scan received at " << msg_pc->header.stamp.toSec());
 	ROS_INFO_STREAM("marker_6dof received at " << msg_rt->header.stamp.toSec());
@@ -165,7 +166,7 @@ void callback(const sensor_msgs::CameraInfoConstPtr& msg_info,
 	}
 	std::cout << "\n";
 
-	getCorners(temp_mat, retval, projection_matrix, config.num_of_markers, config.MAX_ITERS);
+	//getCorners(temp_mat, retval, projection_matrix, config.num_of_markers, config.MAX_ITERS);
 	find_transformation(marker_info, config.num_of_markers, config.MAX_ITERS, lidarToCamera);
 	//ros::shutdown();
 }
@@ -183,6 +184,8 @@ int main(int argc, char** argv)
 		ROS_INFO_STREAM("Reading CameraInfo from topic");
 		n.getParam("/lidar_camera_calibration/camera_info_topic", CAMERA_INFO_TOPIC);
 		n.getParam("/lidar_camera_calibration/velodyne_topic", VELODYNE_TOPIC);
+		
+		
 
 		message_filters::Subscriber<sensor_msgs::CameraInfo> info_sub(n, CAMERA_INFO_TOPIC, 1);
 		message_filters::Subscriber<sensor_msgs::PointCloud2> cloud_sub(n, VELODYNE_TOPIC, 1);
@@ -201,14 +204,21 @@ int main(int argc, char** argv)
 		ROS_INFO_STREAM("Reading CameraInfo from configuration file");
   		n.getParam("/lidar_camera_calibration/velodyne_topic", VELODYNE_TOPIC);
 
+		ROS_INFO("GOT VELODYNE PARAM");
+		ROS_INFO_STREAM(VELODYNE_TOPIC);
 		message_filters::Subscriber<sensor_msgs::PointCloud2> cloud_sub(n, VELODYNE_TOPIC, 1);
+		ROS_INFO("cheguei1");
 		message_filters::Subscriber<lidar_camera_calibration::marker_6dof> rt_sub(n, "lidar_camera_calibration_rt", 1);
-
+		ROS_INFO("cheguei2");
 		typedef sync_policies::ApproximateTime<sensor_msgs::PointCloud2, lidar_camera_calibration::marker_6dof> MySyncPolicy;
+		ROS_INFO("cheguei3");
 		Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), cloud_sub, rt_sub);
+		ROS_INFO("cheguei4");
 		sync.registerCallback(boost::bind(&callback_noCam, _1, _2));
-
+		ROS_INFO("cheguei5");
+		
 		ros::spin();
+		
 	}
 
 	return EXIT_SUCCESS;

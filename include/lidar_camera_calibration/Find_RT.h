@@ -370,10 +370,55 @@ void readArucoPose(std::vector<float> marker_info, int num_of_marker_in_config)
 	infile.close();
 }
 
+// meu leitor de pontos
+std::pair<MatrixXd, MatrixXd> myPoints()
+{
+	std::ifstream ler_pontos(pkg_loc + "/conf/mypoints.txt"); // vai ler os pontos do mypoints.txt
+	int n_points=0;
+
+	ler_pontos >> n_points;
+
+	ROS_ASSERT(n_points > 0);
+	
+	MatrixXd mylidar(3,n_points), mycamera(3,n_points);
+	
+	
+	for(int i=0; i<n_points; i++)
+	{
+		ler_pontos >> mylidar(0,i) >> mylidar(1,i) >> mylidar(2,i);
+	}
+	for(int i=0; i<n_points; i++)
+	{
+		ler_pontos >> mycamera(0,i) >> mycamera(1,i) >> mycamera(2,i);
+	}
+	ler_pontos.close();
+
+	std::ofstream escrever_pontos(pkg_loc + "/conf/points.txt", std::ios_base::trunc); // apaga o ficheiro points.txt e escreve os pontos que defini
+ 
+  	escrever_pontos << n_points << "\n";
+
+  	for(int i=0; i<n_points; i++) 
+  	{
+		escrever_pontos << mylidar(0,i) << " " << mylidar(1,i) << " " << mylidar(2,i) << "\n";
+  	}
+
+  	for(int i=0; i<n_points; i++) 
+  	{
+		escrever_pontos << mycamera(0,i)<< " " << mycamera(1,i) << " " << mycamera(2,i) << "\n";
+  	}
+  
+  	escrever_pontos.close();
+
+	// camera values are stored in variable 'lidar' and vice-versa
+	// need to change this
+	return std::pair<MatrixXd, MatrixXd>(mylidar, mycamera);
+	//return std::pair<MatrixXd, MatrixXd>(camera, lidar);
+}
 
 void find_transformation(std::vector<float> marker_info, int num_of_marker_in_config, int MAX_ITERS, Eigen::Matrix3d lidarToCamera)
 {
 	readArucoPose(marker_info, num_of_marker_in_config);
+	myPoints();
 	std::pair<MatrixXd, MatrixXd> point_clouds = readArray();
 	Matrix4d T = calc_RT(point_clouds.first, point_clouds.second, MAX_ITERS, lidarToCamera);
 }

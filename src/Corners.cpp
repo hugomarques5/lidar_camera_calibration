@@ -28,9 +28,11 @@
 int iteration_count = 0;
 std::vector< std::vector<cv::Point> > stored_corners;
 
+
 bool getCorners(cv::Mat img, pcl::PointCloud<pcl::PointXYZ> scan, cv::Mat P, int num_of_markers, int MAX_ITERS)
 {
 
+	ROS_INFO("cheguei_corners_2");
 	ROS_INFO_STREAM("iteration number: " << iteration_count << "\n");
 
 	/*Masking happens here */
@@ -46,15 +48,17 @@ bool getCorners(cv::Mat img, pcl::PointCloud<pcl::PointXYZ> scan, cv::Mat P, int
 
 	pcl::PointCloud<pcl::PointXYZ> pc = scan;
 	//scan = Velodyne::Velodyne(filtered_pc);
-
+	ROS_INFO_STREAM("Scan: " << scan << "\n\n");
 	cv::Rect frame(0, 0, img.cols, img.rows);
 	
 	//pcl::io::savePCDFileASCII("/home/vishnu/final2.pcd", scan.point_cloud);
 	
 	cv::Mat image_edge_laser = project(P, frame, scan, NULL);
+	//ROS_INFO_STREAM("image_edge_laser_1: " << image_edge_laser << "\n\n");
 	cv::threshold(image_edge_laser, image_edge_laser, 10, 255, 0);
+	//ROS_INFO_STREAM("image_edge_laser: " << image_edge_laser << "\n\n");
 
-
+	ROS_INFO("cheguei_corners_3");
 	
 
 	cv::Mat combined_rgb_laser;
@@ -69,7 +73,8 @@ bool getCorners(cv::Mat img, pcl::PointCloud<pcl::PointXYZ> scan, cv::Mat P, int
 	cv::imshow("combined", combined_rgb_laser);
 	cv::waitKey(5);
 	*/
-
+ 	
+	ROS_INFO("cheguei_corners_4");
 	std::map<std::pair<int, int>, std::vector<float> > c2D_to_3D;
 	std::vector<float> point_3D;
 
@@ -95,6 +100,7 @@ bool getCorners(cv::Mat img, pcl::PointCloud<pcl::PointXYZ> scan, cv::Mat P, int
 			}
 	}
 
+	ROS_INFO("cheguei_corners_5");
 	/* print the correspondences */
 	/*for(std::map<std::pair<int, int>, std::vector<float> >::iterator it=c2D_to_3D.begin(); it!=c2D_to_3D.end(); ++it)
 	{
@@ -116,40 +122,52 @@ bool getCorners(cv::Mat img, pcl::PointCloud<pcl::PointXYZ> scan, cv::Mat P, int
 	cv::namedWindow("cloud", cv::WINDOW_NORMAL);
 	cv::namedWindow("polygon", cv::WINDOW_NORMAL); 
 	//cv::namedWindow("combined", cv::WINDOW_NORMAL); 
-
+	ROS_INFO("cheguei_corners_6");
 	std::string pkg_loc = ros::package::getPath("lidar_camera_calibration");
-	std::ofstream outfile(pkg_loc + "/conf/points.txt", std::ios_base::trunc);
-	outfile << QUADS*4 << "\n";
-
-	for(int q=0; q<QUADS; q++)
+	//------------------- Escreve os pontos obtidos pelas janelas no ficheiro points.txt ------------------//
+	
+	std::ofstream outfile(pkg_loc + "/conf/points.txt", std::ios_base::trunc); // cria variável para escrever em points.txt
+	outfile << QUADS*4 << "\n"; // escreve 8 -> numero de pontos -> Quads = 2 = num_markers
+	ROS_INFO("cheguei_corners_7");
+	for(int q=0; q<QUADS; q++) // para os 4 cantos dos cartões
 	{
+		ROS_INFO("cheguei_corners_8");
 		std::cout << "---------Moving on to next marker--------\n";
 		std::vector<Eigen::VectorXf> line_model;
 		for(int i=0; i<LINE_SEGMENTS[q]; i++)
 		{
-			cv::Point _point_;
+			ROS_INFO("cheguei_corners_9");
+			cv::Point _point_;	
+			//cv::Point _mypoint_;
 			std::vector<cv::Point> polygon;
 			int collected;
+
 
 			// get markings in the first iteration only
 			if(iteration_count == 0)
 			{
+				ROS_INFO("cheguei_corners_10");
 				polygon.clear();
 				collected = 0;
 				while(collected != LINE_SEGMENTS[q])
 				{
 					
 						cv::setMouseCallback("cloud", onMouse, &_point_);
-						
 						cv::imshow("cloud", image_edge_laser);
 						cv::waitKey(0);
-						++collected;
-						//std::cout << _point_.x << " " << _point_.y << "\n";
-						polygon.push_back(_point_);
+
+				//------------------ Buscar pontos a um ficheiro ----------------//
+					//std::ofstream infile(pkg_loc + "/conf/pontos.txt", std::ios_base::trunc);
+
+					++collected;
+					//std::cout << _mypoint_.x << " " << _mypoint_.y << "\n";
+					polygon.push_back(_point_);
 				}
 				stored_corners.push_back(polygon);
+				
 			}
 			
+			ROS_INFO("cheguei_corners_11");
 			polygon = stored_corners[4*q+i];
 
 			cv::Mat polygon_image = cv::Mat::zeros(image_edge_laser.size(), CV_8UC1);

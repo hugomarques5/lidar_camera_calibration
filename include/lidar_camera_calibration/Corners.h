@@ -24,3 +24,5 @@
 
 
 bool getCorners(cv::Mat img, pcl::PointCloud<pcl::PointXYZ> scan, cv::Mat P, int num_of_markers, int MAX_ITERS);
+
+
